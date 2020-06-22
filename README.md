@@ -1,0 +1,2 @@
+# MyDataCollectingTool
+データ収集用のプログラムを集めるためのもの
