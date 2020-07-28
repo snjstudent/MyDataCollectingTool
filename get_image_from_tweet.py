@@ -53,7 +53,7 @@ class Tweet:
             for i in tqdm_bar:
                 try:
                     # 1ページ20ツイートっぽい？
-                    #countのデフォルト値が1っぽいので設定
+                    # countのデフォルト値が1っぽいので設定
                     search_result = self.api.search(
                         q=keyword, count=20, max_id=max_id)
                     for result in search_result:
