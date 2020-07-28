@@ -3,21 +3,24 @@ import argparse
 import urllib
 import os
 import time
-from key import Key_twitter 
+from key import Key_twitter
 from tqdm import tqdm
 from baseclass_get_image import ArgParse_Base
+
 
 class ArgParse(ArgParse_Base):
     def __init__(self):
         super().__init__(text='ツイートから画像を取得')
 
     def add_argument(self):
-        self.parser.add_argument('-n', '--name', nargs='*', default="Test", help="検索するワード（複数可）")
-        self.parser.add_argument('-p', '--number_of_page', default=0, help="取得する限界数（デフォルトは無限）")
+        self.parser.add_argument(
+            '-n', '--name', nargs='*', default="Test", help="検索するワード（複数可）")
+        self.parser.add_argument(
+            '-p', '--number_of_page', default=0, help="取得する限界数（デフォルトは無限）")
         self.parser.add_argument('-d', '--directory', help="保存するディレクトリ")
         args = self.parser.parse_args()
         return args
-        
+
 
 class Tweet:
     def __init__(self, args):
@@ -29,10 +32,8 @@ class Tweet:
         if not os.path.exists(self.args.directory):
             os.mkdir(self.args.directory)
 
-
     def __download_image(self, url):
-        time.sleep(0.1)
-        self.urls_downloaded.append(url)
+        time.sleep(0.5)
         url_orig = url + ":orig"
         file_name = url.split('/')[-1]
         save_path = self.args.directory + "/" + file_name
@@ -42,8 +43,7 @@ class Tweet:
                 f.write(responce.read())
         except Exception as e:
             print("Can't download image because : " + e)
-        
-        
+
     def get_image_from_tweet(self):
         urls = []
         max_id = 0
@@ -51,26 +51,32 @@ class Tweet:
             tqdm_bar = tqdm(range(1, int(self.args.number_of_page)))
             tqdm_bar.set_description("Getting url... ")
             for i in tqdm_bar:
-                search_result = self.api.search(q=keyword, max_id=max_id)
-                for result in search_result:
-                    if 'media' in result.entities:
-                        for media in result.entities['media']:
-                            url = media['media_url_https']
-                max_id = result.id
-                time.sleep(0.1)
+                try:
+                    # 1ページ20ツイートっぽい？
+                    #countのデフォルト値が1っぽいので設定
+                    search_result = self.api.search(
+                        q=keyword, count=20, max_id=max_id)
+                    for result in search_result:
+                        if 'media' in result.entities:
+                            for media in result.entities['media']:
+                                url = media['media_url_https']
+                                urls.append(url)
+                    max_id = result.id
+                except Exception as e:
+                    print(e)
+                time.sleep(5)
         urls = list(set(urls))
         tqdm_bar = tqdm(urls)
         tqdm_bar.set_description("Downloading image... ")
         for url in tqdm_bar:
-            self.__download_image(url)
+            try:
+                self.__download_image(url)
+            except Exception as e:
+                print(e)
+
 
 if __name__ == "__main__":
     parser = ArgParse()
     args = parser.add_argument()
     tweet = Tweet(args)
     tweet.get_image_from_tweet()
-    
-
-        
-
-
